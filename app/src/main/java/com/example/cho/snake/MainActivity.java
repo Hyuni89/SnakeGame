@@ -1,6 +1,9 @@
 package com.example.cho.snake;
 
+import android.content.Context;
 import android.content.res.Resources;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -16,19 +19,43 @@ public class MainActivity extends AppCompatActivity {
     private RelativeLayout rl;
     private GridLayout gl;
     private SnakeEngine sn;
+    private Handler h;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        h = new Handler() {
+            @Override
+            public void handleMessage(Message msg) {
+                if(msg.what == 0) {
+                    gl.removeAllViews();
+                } else {
+                    ImageView iv = new ImageView((Context)msg.obj);
+                    iv.setImageResource(msg.arg1);
+                    iv.setLayoutParams(new GridLayout.LayoutParams());
+
+                    Resources r = getResources();
+                    int px = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10, r.getDisplayMetrics());
+                    GridLayout.LayoutParams params = (GridLayout.LayoutParams)iv.getLayoutParams();
+                    params.width = px;
+                    params.height = px;
+
+//                gl.setColumnCount(msg.arg2);
+//                gl.setRowCount(msg.arg2);
+                    gl.addView(iv, params);
+                }
+            }
+        };
         sn = new SnakeEngine();
         Thread t = new Thread(new Runnable() {
             @Override
             public void run() {
                 while(sn.isAlive()) {
                     sn.go();
-                    show(gl, sn.getMap());
+                    clear();
+                    show(sn.getMap());
                     try {
                         Thread.sleep((long)(1000 * sn.getGap()));
                     } catch(Exception e) {
@@ -70,39 +97,39 @@ public class MainActivity extends AppCompatActivity {
         t.start();
     }
 
-    private void show(GridLayout gl, int[][] map) {
+    private void show(int[][] map) {
         int n = map.length - 2;
-        Log.e("by cho", String.format("%d", n));
-        gl.setColumnCount(n);
-        gl.setRowCount(n);
-        ImageView iv;
+        int iv = 0;
 
         for(int i = 1; i <= n; i++) {
             for(int j = 1; j <= n; j++) {
-                iv = new ImageView(this);
-                Log.e("by cho", String.format("%d %d", i, j));
                 switch(map[i][j]) {
                     case 0:
-                        iv.setImageResource(R.drawable.cell);
+                        iv = R.drawable.cell;
                         break;
                     case 1:
-                        iv.setImageResource(R.drawable.head);
+                        iv = R.drawable.head;
                         break;
                     case 2:
-                        iv.setImageResource(R.drawable.body);
+                        iv = R.drawable.body;
                         break;
                     case 3:
-                        iv.setImageResource(R.drawable.append);
+                        iv = R.drawable.append;
                         break;
                     default:
                 }
-                Resources r = getResources();
-                int px = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10, r.getDisplayMetrics());
-                GridLayout.LayoutParams params = (GridLayout.LayoutParams)iv.getLayoutParams();
-                params.width = px;
-                params.height = px;
-                gl.addView(iv, params);
+
+                Message msg = new Message();
+                msg.what = 1;
+                msg.arg1 = iv;
+                msg.arg2 = n;
+                msg.obj = this;
+                h.sendMessage(msg);
             }
         }
+    }
+
+    private void clear() {
+        h.sendEmptyMessage(0);
     }
 }
