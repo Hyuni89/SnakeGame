@@ -53,6 +53,10 @@ public class SnakeEngine {
         map[head.y][head.x] = 1;
     }
 
+    public int getLevel() {
+        return level;
+    }
+
     public void setDirection(int swipe) {
         // swipe        1:up 2:down, 3:left, 4:right
         // direction    1:up 2:down, 3:left, 4:right

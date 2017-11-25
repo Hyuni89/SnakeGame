@@ -4,8 +4,10 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.os.Handler;
 import android.os.Message;
+import android.os.Messenger;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.style.MaskFilterSpan;
 import android.util.Log;
 import android.util.TypedValue;
 import android.widget.GridLayout;
@@ -20,6 +22,8 @@ public class MainActivity extends AppCompatActivity {
     private GridLayout gl;
     private SnakeEngine sn;
     private Handler h;
+    private final int NOTIFY_N = 0;
+    private final int UPDATE_ELEMENT = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,22 +33,28 @@ public class MainActivity extends AppCompatActivity {
         h = new Handler() {
             @Override
             public void handleMessage(Message msg) {
-                if(msg.what == 0) {
+                if(msg.what == NOTIFY_N) {
+                    int n = msg.arg1;
                     gl.removeAllViews();
-                } else {
-                    ImageView iv = new ImageView((Context)msg.obj);
-                    iv.setImageResource(msg.arg1);
-                    iv.setLayoutParams(new GridLayout.LayoutParams());
 
-                    Resources r = getResources();
-                    int px = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10, r.getDisplayMetrics());
-                    GridLayout.LayoutParams params = (GridLayout.LayoutParams)iv.getLayoutParams();
-                    params.width = px;
-                    params.height = px;
+                    for(int i = 0; i < n * n; i++) {
+                        ImageView iv = new ImageView((Context)msg.obj);
+                        iv.setImageResource(R.drawable.cell);
+                        iv.setLayoutParams(new GridLayout.LayoutParams());
 
-//                gl.setColumnCount(msg.arg2);
-//                gl.setRowCount(msg.arg2);
-                    gl.addView(iv, params);
+                        Resources r = getResources();
+                        int px = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10, r.getDisplayMetrics());
+                        GridLayout.LayoutParams params = (GridLayout.LayoutParams)iv.getLayoutParams();
+                        params.width = px;
+                        params.height = px;
+
+                        gl.addView(iv, params);
+                    }
+                } else if(msg.what == UPDATE_ELEMENT) {
+                    ImageView iv = (ImageView)gl.getChildAt(msg.arg2);
+                    if(iv != null) {
+                        iv.setImageResource(msg.arg1);
+                    }
                 }
             }
         };
@@ -52,9 +62,14 @@ public class MainActivity extends AppCompatActivity {
         Thread t = new Thread(new Runnable() {
             @Override
             public void run() {
+                int level = -1;
                 while(sn.isAlive()) {
+                    if(level != sn.getLevel()) {
+                        initMap(sn.getMap().length - 2);
+                        level = sn.getLevel();
+                        continue;
+                    }
                     sn.go();
-                    clear();
                     show(sn.getMap());
                     try {
                         Thread.sleep((long)(1000 * sn.getGap()));
@@ -120,16 +135,19 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 Message msg = new Message();
-                msg.what = 1;
+                msg.what = UPDATE_ELEMENT;
                 msg.arg1 = iv;
-                msg.arg2 = n;
-                msg.obj = this;
+                msg.arg2 = (i - 1) * n + (j - 1);
                 h.sendMessage(msg);
             }
         }
     }
 
-    private void clear() {
-        h.sendEmptyMessage(0);
+    private void initMap(int mapSize) {
+        Message msg = new Message();
+        msg.what = NOTIFY_N;
+        msg.arg1 = mapSize;
+        msg.obj = this;
+        h.sendMessage(msg);
     }
 }
