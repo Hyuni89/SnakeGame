@@ -1,6 +1,11 @@
 package com.example.cho.snake;
 
+import android.os.Handler;
+import android.os.Message;
+import android.util.Log;
+
 import java.util.ArrayList;
+import java.util.Random;
 
 /**
  * Created by cho on 17. 11. 19.
@@ -17,6 +22,10 @@ public class SnakeEngine {
     private ArrayList<point> body;
     private point head;
     private boolean isAlive;
+    private Thread timeThread;
+    private Thread itemThread;
+    private Handler h;
+
 
     public SnakeEngine() {
         body = new ArrayList<point>();
@@ -27,6 +36,10 @@ public class SnakeEngine {
 
     public SnakeEngine(int l) {
         setLevel(l);
+    }
+
+    public void setHandler(Handler h) {
+        this.h = h;
     }
 
     private void setLevel(int l) {
@@ -43,6 +56,53 @@ public class SnakeEngine {
         timeGap = Math.pow(0.9, level - 1);
         limitTime = 60;
         isAlive = true;
+        timeThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Message msg;
+                while(limitTime > 0 && isAlive) {
+                    try {
+                        Thread.sleep(1000);
+                    } catch(Exception e) {
+                        e.printStackTrace();
+                    }
+                    limitTime -= 1;
+                    msg = new Message();
+                    msg.what = MainActivity.UPDATE_TIME;
+                    msg.arg1 = limitTime;
+                    h.sendMessage(msg);
+                }
+
+                if(isAlive) {
+                    setLevel(level + 1);
+                }
+            }
+        });
+        itemThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Random random = new Random();
+                while(isAlive && limitTime > 0) {
+                    try {
+                        Thread.sleep(random.nextInt(10) * 1000);
+                    } catch(Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    int x, y;
+                    do {
+                        x = random.nextInt(n) + 1;
+                        y = random.nextInt(n) + 1;
+                    } while(map[y][x] != 0 || ((direction == 1 || direction == 2) && x == head.x) || ((direction == 3 || direction == 4) && y == head.y));
+
+                    if(random.nextBoolean()) {
+                        map[y][x] = 3;      // append
+                    } else {
+                        map[y][x] = -1;     // block
+                    }
+                }
+            }
+        });
 
         for(int i = 0; i < body.size(); i++) {
             body.get(i).x = n / 2;
@@ -62,6 +122,8 @@ public class SnakeEngine {
         // direction    1:up 2:down, 3:left, 4:right
         if(direction == 0) {
             direction = swipe;
+            timeThread.start();
+            itemThread.start();
         } else {
             switch(swipe) {
                 case 1:
@@ -92,22 +154,22 @@ public class SnakeEngine {
         switch(direction) {
             case 1:
                 head.y -= 1;
-                body.add(0, head);
+                body.add(0, new point(head));
                 body.remove(body.size() - 1);
                 break;
             case 2:
                 head.y += 1;
-                body.add(0, head);
+                body.add(0, new point(head));
                 body.remove(body.size() - 1);
                 break;
             case 3:
                 head.x -= 1;
-                body.add(0, head);
+                body.add(0, new point(head));
                 body.remove(body.size() - 1);
                 break;
             case 4:
                 head.x += 1;
-                body.add(0, head);
+                body.add(0, new point(head));
                 body.remove(body.size() - 1);
                 break;
             default:
@@ -122,7 +184,7 @@ public class SnakeEngine {
                 isAlive = false;
                 return;
             case 3:     // append
-                body.add(new point(tx, ty));
+                body.add(new point(body.get(body.size() - 1).x, body.get(body.size() - 1).y));
             default:
                 for(int i = 0; i < body.size(); i++) {
                     map[body.get(i).y][body.get(i).x] = 2;
@@ -149,6 +211,10 @@ public class SnakeEngine {
         point(int x, int y) {
             this.x = x;
             this.y = y;
+        }
+        point(point p) {
+            x = p.x;
+            y = p.y;
         }
     }
 }

@@ -4,10 +4,8 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.os.Handler;
 import android.os.Message;
-import android.os.Messenger;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.style.MaskFilterSpan;
 import android.util.Log;
 import android.util.TypedValue;
 import android.widget.GridLayout;
@@ -18,12 +16,14 @@ import android.widget.TextView;
 public class MainActivity extends AppCompatActivity {
 
     private TextView tv;
+    private TextView timeText;
     private RelativeLayout rl;
     private GridLayout gl;
     private SnakeEngine sn;
     private Handler h;
-    private final int NOTIFY_N = 0;
-    private final int UPDATE_ELEMENT = 1;
+    static final int NOTIFY_N = 0;
+    static final int UPDATE_ELEMENT = 1;
+    static final int UPDATE_TIME = 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,10 +55,13 @@ public class MainActivity extends AppCompatActivity {
                     if(iv != null) {
                         iv.setImageResource(msg.arg1);
                     }
+                } else if(msg.what == UPDATE_TIME) {
+                    timeText.setText(Integer.toString(msg.arg1));
                 }
             }
         };
         sn = new SnakeEngine();
+        sn.setHandler(h);
         Thread t = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -80,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        timeText = (TextView)findViewById(R.id.timeText);
         tv = (TextView)findViewById(R.id.gestureStatusText);
         gl = (GridLayout)findViewById(R.id.SnakeMap);
         rl = (RelativeLayout)findViewById(R.id.mainLayer);
@@ -119,6 +123,9 @@ public class MainActivity extends AppCompatActivity {
         for(int i = 1; i <= n; i++) {
             for(int j = 1; j <= n; j++) {
                 switch(map[i][j]) {
+                    case -1:
+                        iv = R.drawable.block;
+                        break;
                     case 0:
                         iv = R.drawable.cell;
                         break;
