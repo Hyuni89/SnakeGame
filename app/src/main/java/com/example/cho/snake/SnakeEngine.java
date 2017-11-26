@@ -25,21 +25,19 @@ public class SnakeEngine {
     private Thread timeThread;
     private Thread itemThread;
     private Handler h;
+    private Message msg;
 
-
-    public SnakeEngine() {
+    public SnakeEngine(Handler h) {
         body = new ArrayList<point>();
         head = new point(5, 5);
         body.add(head);
+        this.h = h;
         setLevel(1);
     }
 
-    public SnakeEngine(int l) {
-        setLevel(l);
-    }
-
-    public void setHandler(Handler h) {
+    public SnakeEngine(Handler h, int l) {
         this.h = h;
+        setLevel(l);
     }
 
     private void setLevel(int l) {
@@ -59,7 +57,6 @@ public class SnakeEngine {
         timeThread = new Thread(new Runnable() {
             @Override
             public void run() {
-                Message msg;
                 while(limitTime > 0 && isAlive) {
                     try {
                         Thread.sleep(1000);
@@ -111,6 +108,14 @@ public class SnakeEngine {
         head.x = n / 2;
         head.y = n / 2;
         map[head.y][head.x] = 1;
+
+        msg = new Message();
+        msg.what = MainActivity.UPDATE_LEVEL;
+        h.sendMessage(msg);
+        msg = new Message();
+        msg.what = MainActivity.UPDATE_TIME;
+        msg.arg1 = limitTime;
+        h.sendMessage(msg);
     }
 
     public int getLevel() {

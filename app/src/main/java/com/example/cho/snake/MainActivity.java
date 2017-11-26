@@ -16,14 +16,17 @@ import android.widget.TextView;
 public class MainActivity extends AppCompatActivity {
 
     private TextView tv;
+    private TextView levelText;
     private TextView timeText;
     private RelativeLayout rl;
     private GridLayout gl;
     private SnakeEngine sn;
     private Handler h;
+    private Thread t;
     static final int NOTIFY_N = 0;
     static final int UPDATE_ELEMENT = 1;
     static final int UPDATE_TIME = 2;
+    static final int UPDATE_LEVEL = 3;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
                 if(msg.what == NOTIFY_N) {
                     int n = msg.arg1;
                     gl.removeAllViews();
+                    gl.setColumnCount(n);
 
                     for(int i = 0; i < n * n; i++) {
                         ImageView iv = new ImageView((Context)msg.obj);
@@ -57,32 +61,15 @@ public class MainActivity extends AppCompatActivity {
                     }
                 } else if(msg.what == UPDATE_TIME) {
                     timeText.setText(Integer.toString(msg.arg1));
+                } else if(msg.what == UPDATE_LEVEL) {
+                    levelText.setText("Level " + Integer.toString(sn.getLevel()));
                 }
             }
         };
-        sn = new SnakeEngine();
-        sn.setHandler(h);
-        Thread t = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                int level = -1;
-                while(sn.isAlive()) {
-                    if(level != sn.getLevel()) {
-                        initMap(sn.getMap().length - 2);
-                        level = sn.getLevel();
-                        continue;
-                    }
-                    sn.go();
-                    show(sn.getMap());
-                    try {
-                        Thread.sleep((long)(1000 * sn.getGap()));
-                    } catch(Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        });
+        sn = new SnakeEngine(h);
+        t = new Thread(new SnakeRunnable());
 
+        levelText = (TextView)findViewById(R.id.levelText);
         timeText = (TextView)findViewById(R.id.timeText);
         tv = (TextView)findViewById(R.id.gestureStatusText);
         gl = (GridLayout)findViewById(R.id.SnakeMap);
@@ -110,6 +97,20 @@ public class MainActivity extends AppCompatActivity {
             public void onSwipeRight() {
                 tv.setText("Right");
                 sn.setDirection(4);
+            }
+
+            @Override
+            public void Cont() {
+                if(!sn.isAlive()) {
+                    try {
+                        t.join();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    sn = new SnakeEngine(h);
+                    t = new Thread(new SnakeRunnable());
+                    t.start();
+                }
             }
         });
 
@@ -151,10 +152,32 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initMap(int mapSize) {
+        Log.d("by cho", Integer.toString(mapSize));
         Message msg = new Message();
         msg.what = NOTIFY_N;
         msg.arg1 = mapSize;
         msg.obj = this;
         h.sendMessage(msg);
+    }
+
+    private class SnakeRunnable implements Runnable {
+        @Override
+        public void run() {
+            int level = -1;
+            while(sn.isAlive()) {
+                if(level != sn.getLevel()) {
+                    initMap(sn.getMap().length - 2);
+                    level = sn.getLevel();
+                    continue;
+                }
+                sn.go();
+                show(sn.getMap());
+                try {
+                    Thread.sleep((long)(1000 * sn.getGap()));
+                } catch(Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 }

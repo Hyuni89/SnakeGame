@@ -30,6 +30,7 @@ public class TouchListener implements View.OnTouchListener {
 
         @Override
         public boolean onDown(MotionEvent motionEvent) {
+            Cont();
             return true;
         }
 
@@ -92,4 +93,6 @@ public class TouchListener implements View.OnTouchListener {
     public void onSwipeUp() {}
 
     public void onSwipeDown() {}
+
+    public void Cont() {}
 }
