@@ -18,6 +18,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView tv;
     private TextView levelText;
     private TextView timeText;
+    private TextView scoreText;
     private RelativeLayout rl;
     private GridLayout gl;
     private SnakeEngine sn;
@@ -27,6 +28,7 @@ public class MainActivity extends AppCompatActivity {
     static final int UPDATE_ELEMENT = 1;
     static final int UPDATE_TIME = 2;
     static final int UPDATE_LEVEL = 3;
+    static final int UPDATE_SCORE = 4;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +65,8 @@ public class MainActivity extends AppCompatActivity {
                     timeText.setText(Integer.toString(msg.arg1));
                 } else if(msg.what == UPDATE_LEVEL) {
                     levelText.setText("Level " + Integer.toString(sn.getLevel()));
+                } else if(msg.what == UPDATE_SCORE) {
+                    scoreText.setText("Score " + Integer.toString(msg.arg1));
                 }
             }
         };
@@ -71,6 +75,7 @@ public class MainActivity extends AppCompatActivity {
 
         levelText = (TextView)findViewById(R.id.levelText);
         timeText = (TextView)findViewById(R.id.timeText);
+        scoreText = (TextView)findViewById(R.id.scoreText);
         tv = (TextView)findViewById(R.id.gestureStatusText);
         gl = (GridLayout)findViewById(R.id.SnakeMap);
         rl = (RelativeLayout)findViewById(R.id.mainLayer);

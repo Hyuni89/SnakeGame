@@ -30,6 +30,15 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:id="@+id/scoreText"
+        android:text="Score 0"
+        android:textSize="20dp"
+        android:layout_below="@+id/timeText"
+        android:layout_marginLeft="20dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:text="Hello World!"
         android:id="@+id/gestureStatusText"
         android:textSize="10dp"

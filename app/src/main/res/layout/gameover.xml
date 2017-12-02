@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:id="@+id/gameOver"
+    android:layout_centerInParent="true"
+    android:background="@drawable/boundary">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Game Over"
+        android:layout_centerHorizontal="true"
+        android:textSize="40dp"
+        android:textStyle="bold"
+        android:layout_margin="10dp"
+        android:id="@+id/gameOverText"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Restart"
+        android:textAllCaps="false"
+        android:layout_below="@+id/gameOverText"
+        android:layout_alignLeft="@+id/gameOverText"
+        android:id="@+id/restartButton"
+        android:layout_marginBottom="10dp"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAllCaps="false"
+        android:text="Score"
+        android:layout_below="@+id/gameOverText"
+        android:layout_alignRight="@+id/gameOverText"
+        android:id="@+id/scoreButton"
+        android:layout_marginBottom="10dp"/>
+
+</RelativeLayout>

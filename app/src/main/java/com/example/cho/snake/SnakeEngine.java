@@ -26,17 +26,27 @@ public class SnakeEngine {
     private Thread itemThread;
     private Handler h;
     private Message msg;
+    private int score;
+    enum ScoreType {
+        INIT, TIME, APPEND
+    }
+
+    private final int LIMITTIME = 30;
+    private final double TIMEGAP = 0.5;
+
 
     public SnakeEngine(Handler h) {
         body = new ArrayList<point>();
         head = new point(5, 5);
         body.add(head);
         this.h = h;
+        setScore(ScoreType.INIT);
         setLevel(1);
     }
 
     public SnakeEngine(Handler h, int l) {
         this.h = h;
+        setScore(ScoreType.INIT);
         setLevel(l);
     }
 
@@ -51,8 +61,8 @@ public class SnakeEngine {
             }
         }
         direction = 0;
-        timeGap = Math.pow(0.9, level - 1);
-        limitTime = 60;
+        timeGap = Math.pow(TIMEGAP, level - 1);
+        limitTime = LIMITTIME;
         isAlive = true;
         timeThread = new Thread(new Runnable() {
             @Override
@@ -64,6 +74,7 @@ public class SnakeEngine {
                         e.printStackTrace();
                     }
                     limitTime -= 1;
+                    setScore(ScoreType.TIME);
                     msg = new Message();
                     msg.what = MainActivity.UPDATE_TIME;
                     msg.arg1 = limitTime;
@@ -190,6 +201,7 @@ public class SnakeEngine {
                 return;
             case 3:     // append
                 body.add(new point(body.get(body.size() - 1).x, body.get(body.size() - 1).y));
+                setScore(ScoreType.APPEND);
             default:
                 for(int i = 0; i < body.size(); i++) {
                     map[body.get(i).y][body.get(i).x] = 2;
@@ -208,6 +220,21 @@ public class SnakeEngine {
 
     public int[][] getMap() {
         return map;
+    }
+
+    synchronized private void setScore(ScoreType type) {
+        if(type == ScoreType.TIME) {
+            score += 1;
+        } else if(type == ScoreType.APPEND) {
+            score += 100;
+        } else if(type == ScoreType.INIT) {
+            score = 0;
+        }
+
+        msg = new Message();
+        msg.what = MainActivity.UPDATE_SCORE;
+        msg.arg1 = score;
+        h.sendMessage(msg);
     }
 
     class point {
