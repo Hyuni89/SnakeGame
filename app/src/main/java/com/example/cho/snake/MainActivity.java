@@ -1,5 +1,8 @@
 package com.example.cho.snake;
 
+import android.app.Fragment;
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.res.Resources;
 import android.os.Handler;
@@ -24,11 +27,16 @@ public class MainActivity extends AppCompatActivity {
     private SnakeEngine sn;
     private Handler h;
     private Thread t;
+    private FragmentManager fm;
+    private Fragment fg;
+    private FragmentTransaction ft;
+
     static final int NOTIFY_N = 0;
     static final int UPDATE_ELEMENT = 1;
     static final int UPDATE_TIME = 2;
     static final int UPDATE_LEVEL = 3;
     static final int UPDATE_SCORE = 4;
+    static final int GAMEOVER = 5;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +75,12 @@ public class MainActivity extends AppCompatActivity {
                     levelText.setText("Level " + Integer.toString(sn.getLevel()));
                 } else if(msg.what == UPDATE_SCORE) {
                     scoreText.setText("Score " + Integer.toString(msg.arg1));
+                } else if(msg.what == GAMEOVER) {
+                    fm = getFragmentManager();
+                    fg = new GameOverFragment();
+                    ft = fm.beginTransaction();
+                    ft.add(R.id.fragmentPosition, fg);
+                    ft.commit();
                 }
             }
         };
@@ -104,22 +118,39 @@ public class MainActivity extends AppCompatActivity {
                 sn.setDirection(4);
             }
 
-            @Override
-            public void Cont() {
-                if(!sn.isAlive()) {
-                    try {
-                        t.join();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    sn = new SnakeEngine(h);
-                    t = new Thread(new SnakeRunnable());
-                    t.start();
-                }
-            }
+//            @Override
+//            public void Cont() {
+//                if(!sn.isAlive()) {
+//                    try {
+//                        t.join();
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    }
+//                    sn = new SnakeEngine(h);
+//                    t = new Thread(new SnakeRunnable());
+//                    t.start();
+//                }
+//            }
         });
 
         t.start();
+    }
+
+    public void restartGame() {
+        if(!sn.isAlive()) {
+            try {
+                t.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            ft = fm.beginTransaction();
+            ft.remove(fg);
+            ft.commit();
+
+            sn = new SnakeEngine(h);
+            t = new Thread(new SnakeRunnable());
+            t.start();
+        }
     }
 
     private void show(int[][] map) {
@@ -183,6 +214,10 @@ public class MainActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
             }
+
+            Message msg = new Message();
+            msg.what = GAMEOVER;
+            h.sendMessage(msg);
         }
     }
 }
