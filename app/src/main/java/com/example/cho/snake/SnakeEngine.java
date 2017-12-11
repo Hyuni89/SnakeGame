@@ -222,6 +222,10 @@ public class SnakeEngine {
         return map;
     }
 
+    public int getScore() {
+        return score;
+    }
+
     synchronized private void setScore(ScoreType type) {
         if(type == ScoreType.TIME) {
             score += 1;

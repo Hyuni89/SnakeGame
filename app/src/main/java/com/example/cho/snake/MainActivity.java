@@ -30,6 +30,7 @@ public class MainActivity extends AppCompatActivity {
     private FragmentManager fm;
     private Fragment fg;
     private FragmentTransaction ft;
+    private ScoreDB db;
 
     static final int NOTIFY_N = 0;
     static final int UPDATE_ELEMENT = 1;
@@ -43,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        db = new ScoreDB(this);
         h = new Handler() {
             @Override
             public void handleMessage(Message msg) {
@@ -77,6 +79,12 @@ public class MainActivity extends AppCompatActivity {
                     scoreText.setText("Score " + Integer.toString(msg.arg1));
                 } else if(msg.what == GAMEOVER) {
                     fm = getFragmentManager();
+                    if(db.isPut(sn.getScore())) {
+                        fg = new InputScoreFragment();
+                        ft = fm.beginTransaction();
+                        ft.add(R.id.fragmentPosition, fg);
+                        ft.commit();
+                    }
                     fg = new GameOverFragment();
                     ft = fm.beginTransaction();
                     ft.add(R.id.fragmentPosition, fg);
@@ -143,13 +151,26 @@ public class MainActivity extends AppCompatActivity {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            ft = fm.beginTransaction();
-            ft.remove(fg);
-            ft.commit();
+            clearFragment();
 
             sn = new SnakeEngine(h);
             t = new Thread(new SnakeRunnable());
             t.start();
+        }
+    }
+
+    public void updateDB(String name, int score) {
+        db.insert(name, score);
+        clearFragment();
+    }
+
+    public void clearFragment() {
+        if(fg != null) {
+            ft = fm.beginTransaction();
+            ft.remove(fg);
+            ft.commit();
+
+            fg = null;
         }
     }
 
@@ -188,7 +209,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initMap(int mapSize) {
-        Log.d("by cho", Integer.toString(mapSize));
         Message msg = new Message();
         msg.what = NOTIFY_N;
         msg.arg1 = mapSize;

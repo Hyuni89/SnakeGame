@@ -6,6 +6,10 @@ import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
+
+import java.util.ArrayList;
+import java.util.Collections;
 
 /**
  * Created by cho on 17. 12. 10.
@@ -22,25 +26,56 @@ public class ScoreDB {
 
     public void insert(String name, int score) {
         db = helper.getWritableDatabase();
+
+        ArrayList<RecordInfo> tmp = getAll();
+
+        if(tmp.size() < 10) {
+            tmp.add(new RecordInfo(name, score));
+            Collections.sort(tmp);
+        } else {
+            Collections.sort(tmp);
+            tmp.get(tmp.size() - 1).name = name;
+            tmp.get(tmp.size() - 1).score = score;
+        }
+
+        helper.onUpgrade(db, 0, 0);
         ContentValues values = new ContentValues();
-        values.put("name", name);
-        values.put("score", score);
-        db.insert("scoreboard", null, values);
+        for(int i = 0; i < tmp.size(); i++) {
+            values.put("name", tmp.get(i).name);
+            values.put("score", tmp.get(i).score);
+            db.insert("scoreboard", null, values);
+        }
+    }
+
+    public ArrayList<RecordInfo> getAll() {
+        ArrayList<RecordInfo> ret = new ArrayList<>();
+        String sql = "select * from scoreboard";
+        Cursor cursor = db.rawQuery(sql, null);
+
+        for(int i = 0; i < getCount(); i++) {
+            ret.add(new RecordInfo(cursor.getString(1), cursor.getInt(2)));
+            cursor.moveToNext();
+        }
+
+        return ret;
     }
 
     public long getCount() {
         db = helper.getReadableDatabase();
-        return DatabaseUtils.queryNumEntries(db, "scoreboard");
+        long ret = DatabaseUtils.queryNumEntries(db, "scoreboard");
+        Log.d("by cho", Long.toString(ret));
+        return ret;
     }
 
     public boolean isPut(int score) {
         if(getCount() <= 10) return true;
 
-        // TODO
-        String sql = "select * from scoreboard";
+        String sql = "select * from scoreboard where min(score)";
         Cursor cursor = db.rawQuery(sql, null);
-        cursor.moveToLast();
-        return true;
+        int lastOne = cursor.getInt(2);
+
+        if(score > lastOne) return true;
+        return false;
     }
 }
 
@@ -61,5 +96,21 @@ class SQLiteHelper extends SQLiteOpenHelper {
         String sql = "drop table if exists scoreboard";
         sqLiteDatabase.execSQL(sql);
         onCreate(sqLiteDatabase);
+    }
+}
+
+class RecordInfo implements Comparable<RecordInfo> {
+
+    String name;
+    int score;
+
+    RecordInfo(String name, int score) {
+        this.name = name;
+        this.score = score;
+    }
+
+    @Override
+    public int compareTo(RecordInfo recordInfo) {
+        return this.score - recordInfo.score;
     }
 }
