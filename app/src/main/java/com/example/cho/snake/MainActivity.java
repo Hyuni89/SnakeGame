@@ -81,14 +81,15 @@ public class MainActivity extends AppCompatActivity {
                     fm = getFragmentManager();
                     if(db.isPut(sn.getScore())) {
                         fg = new InputScoreFragment();
+                        Bundle bundle = new Bundle();
+                        bundle.putInt("score", sn.getScore());
+                        fg.setArguments(bundle);
                         ft = fm.beginTransaction();
                         ft.add(R.id.fragmentPosition, fg);
                         ft.commit();
+                    } else {
+                        showGameOverState();
                     }
-                    fg = new GameOverFragment();
-                    ft = fm.beginTransaction();
-                    ft.add(R.id.fragmentPosition, fg);
-                    ft.commit();
                 }
             }
         };
@@ -162,6 +163,14 @@ public class MainActivity extends AppCompatActivity {
     public void updateDB(String name, int score) {
         db.insert(name, score);
         clearFragment();
+        showGameOverState();
+    }
+
+    private void showGameOverState() {
+        fg = new GameOverFragment();
+        ft = fm.beginTransaction();
+        ft.add(R.id.fragmentPosition, fg);
+        ft.commit();
     }
 
     public void clearFragment() {

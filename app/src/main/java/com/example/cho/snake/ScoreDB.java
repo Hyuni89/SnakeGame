@@ -51,10 +51,15 @@ public class ScoreDB {
         ArrayList<RecordInfo> ret = new ArrayList<>();
         String sql = "select * from scoreboard";
         Cursor cursor = db.rawQuery(sql, null);
+        cursor.moveToFirst();
 
         for(int i = 0; i < getCount(); i++) {
             ret.add(new RecordInfo(cursor.getString(1), cursor.getInt(2)));
             cursor.moveToNext();
+        }
+
+        for(int i=0; i<ret.size(); i++) {
+            Log.d("by cho", String.format("[%s][%d]", ret.get(i).name, ret.get(i).score));
         }
 
         return ret;
@@ -63,16 +68,18 @@ public class ScoreDB {
     public long getCount() {
         db = helper.getReadableDatabase();
         long ret = DatabaseUtils.queryNumEntries(db, "scoreboard");
-        Log.d("by cho", Long.toString(ret));
+        Log.d("by cho", "DB count: " + Long.toString(ret));
         return ret;
     }
 
     public boolean isPut(int score) {
-        if(getCount() <= 10) return true;
+        if(getCount() < 10) return true;
 
-        String sql = "select * from scoreboard where min(score)";
+        String sql = "select min(score) from scoreboard";
         Cursor cursor = db.rawQuery(sql, null);
-        int lastOne = cursor.getInt(2);
+        cursor.moveToFirst();
+        int lastOne = cursor.getInt(0);
+        Log.d("by cho", String.format("isPut[%d][%d]", lastOne, score));
 
         if(score > lastOne) return true;
         return false;

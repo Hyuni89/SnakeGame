@@ -13,4 +13,13 @@
 
     </ListView>
 
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/closeButton"
+        android:layout_below="@id/scoreList"
+        android:text="Close"
+        android:textAllCaps="false"
+        android:layout_centerHorizontal="true"/>
+
 </RelativeLayout>

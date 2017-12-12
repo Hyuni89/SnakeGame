@@ -26,14 +26,14 @@ public class InputScoreFragment extends Fragment {
         nameText = (EditText)view.findViewById(R.id.inputName);
         scoreText = (TextView)view.findViewById(R.id.newScore);
 
-        final int score = savedInstanceState.getInt("score");
+        final int score = getArguments().getInt("score");
         scoreText.setText(Integer.toString(score));
 
         confirm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 String inputName = nameText.getText().toString();
-                if(inputName == "") {
+                if(inputName.getBytes().length <= 0) {
                     inputName = "AAA";
                 }
                 ((MainActivity)getActivity()).updateDB(inputName, score);
