@@ -16,6 +16,8 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+
 public class MainActivity extends AppCompatActivity {
 
     private TextView tv;
@@ -164,6 +166,10 @@ public class MainActivity extends AppCompatActivity {
         db.insert(name, score);
         clearFragment();
         showGameOverState();
+    }
+
+    public ArrayList<RecordInfo> getAll() {
+        return db.getAll();
     }
 
     private void showGameOverState() {
