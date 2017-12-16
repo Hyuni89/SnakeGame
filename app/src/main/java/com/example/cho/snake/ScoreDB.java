@@ -118,6 +118,6 @@ class RecordInfo implements Comparable<RecordInfo> {
 
     @Override
     public int compareTo(RecordInfo recordInfo) {
-        return this.score - recordInfo.score;
+        return recordInfo.score - this.score;
     }
 }

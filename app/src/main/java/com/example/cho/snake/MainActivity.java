@@ -179,6 +179,14 @@ public class MainActivity extends AppCompatActivity {
         ft.commit();
     }
 
+    public void showScoreBoardState() {
+        clearFragment();
+        fg = new ScoreBoardFragment();
+        ft = fm.beginTransaction();
+        ft.add(R.id.fragmentPosition, fg);
+        ft.commit();
+    }
+
     public void clearFragment() {
         if(fg != null) {
             ft = fm.beginTransaction();

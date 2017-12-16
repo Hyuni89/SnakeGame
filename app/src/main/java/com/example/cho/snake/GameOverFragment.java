@@ -32,7 +32,7 @@ public class GameOverFragment extends Fragment {
         scoreBoard.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                ((MainActivity)getActivity()).showScoreBoardState();
             }
         });
 
