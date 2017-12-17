@@ -1,4 +1,4 @@
-package com.example.cho.snake;
+package com.example.cho.snake.fragments;
 
 import android.app.Fragment;
 import android.os.Bundle;
@@ -8,6 +8,9 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+
+import com.example.cho.snake.MainActivity;
+import com.example.cho.snake.R;
 
 /**
  * Created by cho on 17. 12. 12.

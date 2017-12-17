@@ -1,4 +1,4 @@
-package com.example.cho.snake;
+package com.example.cho.snake.fragments;
 
 import android.app.Fragment;
 import android.content.Context;
@@ -10,6 +10,10 @@ import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
+
+import com.example.cho.snake.MainActivity;
+import com.example.cho.snake.R;
+import com.example.cho.snake.database.RecordInfo;
 import java.util.ArrayList;
 import java.util.Collections;
 

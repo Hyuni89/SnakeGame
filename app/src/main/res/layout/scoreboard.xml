@@ -11,7 +11,8 @@
         android:layout_height="wrap_content"
         android:id="@+id/scoreList"
         android:clickable="false"
-        android:layout_marginBottom="6dp">
+        android:layout_marginBottom="6dp"
+        android:layout_marginTop="6dp">
 
     </ListView>
 
@@ -21,6 +22,7 @@
         android:id="@+id/closeButton"
         android:text="Close"
         android:textAllCaps="false"
-        android:layout_gravity="center"/>
+        android:layout_gravity="center"
+        android:layout_marginBottom="6dp"/>
 
 </LinearLayout>

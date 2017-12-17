@@ -9,12 +9,17 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.util.TypedValue;
 import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+
+import com.example.cho.snake.database.RecordInfo;
+import com.example.cho.snake.database.ScoreDB;
+import com.example.cho.snake.fragments.GameOverFragment;
+import com.example.cho.snake.fragments.InputScoreFragment;
+import com.example.cho.snake.fragments.ScoreBoardFragment;
 
 import java.util.ArrayList;
 

@@ -1,4 +1,4 @@
-package com.example.cho.snake;
+package com.example.cho.snake.database;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -7,7 +7,6 @@ import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
-
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -20,7 +19,7 @@ public class ScoreDB {
     SQLiteDatabase db;
     SQLiteHelper helper;
 
-    ScoreDB(Context context) {
+    public ScoreDB(Context context) {
         helper = new SQLiteHelper(context, "ScoreBoard.db", null, 1);
     }
 
@@ -103,21 +102,5 @@ class SQLiteHelper extends SQLiteOpenHelper {
         String sql = "drop table if exists scoreboard";
         sqLiteDatabase.execSQL(sql);
         onCreate(sqLiteDatabase);
-    }
-}
-
-class RecordInfo implements Comparable<RecordInfo> {
-
-    String name;
-    int score;
-
-    RecordInfo(String name, int score) {
-        this.name = name;
-        this.score = score;
-    }
-
-    @Override
-    public int compareTo(RecordInfo recordInfo) {
-        return recordInfo.score - this.score;
     }
 }
