@@ -9,6 +9,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.widget.GridLayout;
 import android.widget.ImageView;
@@ -38,6 +39,8 @@ public class MainActivity extends AppCompatActivity {
     private Fragment fg;
     private FragmentTransaction ft;
     private ScoreDB db;
+    private int deviceWidth;
+    private int deviceHeight;
 
     static final int NOTIFY_N = 0;
     static final int UPDATE_ELEMENT = 1;
@@ -50,6 +53,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        DisplayMetrics dm = getApplicationContext().getResources().getDisplayMetrics();
+        deviceWidth = dm.widthPixels;
+        deviceHeight = dm.heightPixels;
 
         db = new ScoreDB(this);
         h = new Handler() {
@@ -65,9 +72,10 @@ public class MainActivity extends AppCompatActivity {
                         iv.setImageResource(R.drawable.cell);
                         iv.setLayoutParams(new GridLayout.LayoutParams());
 
-                        Resources r = getResources();
-                        int px = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10, r.getDisplayMetrics());
+//                        Resources r = getResources();
+//                        int px = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10, r.getDisplayMetrics());
                         GridLayout.LayoutParams params = (GridLayout.LayoutParams)iv.getLayoutParams();
+                        int px = (int)(deviceWidth * 0.6) / n;
                         params.width = px;
                         params.height = px;
 
