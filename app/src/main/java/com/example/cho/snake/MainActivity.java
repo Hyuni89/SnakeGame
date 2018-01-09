@@ -11,6 +11,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
+import android.view.View;
 import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -41,6 +42,9 @@ public class MainActivity extends AppCompatActivity {
     private ScoreDB db;
     private int deviceWidth;
     private int deviceHeight;
+    private ImageView pauseButton;
+    private ImageView combatButton;
+    private boolean pause;
 
     static final int NOTIFY_N = 0;
     static final int UPDATE_ELEMENT = 1;
@@ -57,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
         DisplayMetrics dm = getApplicationContext().getResources().getDisplayMetrics();
         deviceWidth = dm.widthPixels;
         deviceHeight = dm.heightPixels;
+        pause = false;
 
         db = new ScoreDB(this);
         h = new Handler() {
@@ -155,6 +160,24 @@ public class MainActivity extends AppCompatActivity {
 //                    t.start();
 //                }
 //            }
+        });
+        pauseButton = (ImageView)findViewById(R.id.pauseButton);
+        pauseButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                pause = !pause;
+                sn.setPause(pause);
+                if(pause) {
+                    timeText.setText("Pause");
+                }
+            }
+        });
+        combatButton = (ImageView)findViewById(R.id.combatButton);
+        combatButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+            }
         });
 
         t.start();
@@ -262,6 +285,9 @@ public class MainActivity extends AppCompatActivity {
                     level = sn.getLevel();
                     continue;
                 }
+
+                while(pause);
+
                 sn.go();
                 show(sn.getMap());
                 try {

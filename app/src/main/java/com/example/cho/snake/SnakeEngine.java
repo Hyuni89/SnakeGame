@@ -27,6 +27,7 @@ public class SnakeEngine {
     private Handler h;
     private Message msg;
     private int score;
+    private boolean pause;
     enum ScoreType {
         INIT, TIME, APPEND
     }
@@ -40,12 +41,14 @@ public class SnakeEngine {
         head = new point(5, 5);
         body.add(head);
         this.h = h;
+        pause = false;
         setScore(ScoreType.INIT);
         setLevel(1);
     }
 
     public SnakeEngine(Handler h, int l) {
         this.h = h;
+        pause = false;
         setScore(ScoreType.INIT);
         setLevel(l);
     }
@@ -73,6 +76,9 @@ public class SnakeEngine {
                     } catch(Exception e) {
                         e.printStackTrace();
                     }
+
+                    while(pause);
+
                     limitTime -= 1;
                     setScore(ScoreType.TIME);
                     msg = new Message();
@@ -82,6 +88,12 @@ public class SnakeEngine {
                 }
 
                 if(isAlive) {
+                    try {
+                        itemThread.interrupt();
+                        itemThread.join();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                     setLevel(level + 1);
                 }
             }
@@ -96,6 +108,8 @@ public class SnakeEngine {
                     } catch(Exception e) {
                         e.printStackTrace();
                     }
+
+                    while(pause);
 
                     int x, y;
                     do {
@@ -239,6 +253,10 @@ public class SnakeEngine {
         msg.what = MainActivity.UPDATE_SCORE;
         msg.arg1 = score;
         h.sendMessage(msg);
+    }
+
+    public void setPause(boolean flag) {
+        pause = flag;
     }
 
     class point {
