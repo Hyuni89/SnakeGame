@@ -1,22 +1,23 @@
 package com.example.cho.snake;
 
+import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Context;
-import android.content.res.Resources;
+import android.content.Intent;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
-import android.util.TypedValue;
 import android.view.View;
 import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.example.cho.snake.connection.CombatManager;
 import com.example.cho.snake.database.RecordInfo;
 import com.example.cho.snake.database.ScoreDB;
 import com.example.cho.snake.fragments.GameOverFragment;
@@ -45,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
     private ImageView pauseButton;
     private ImageView combatButton;
     private boolean pause;
+    private CombatManager cm;
 
     static final int NOTIFY_N = 0;
     static final int UPDATE_ELEMENT = 1;
@@ -115,6 +117,7 @@ public class MainActivity extends AppCompatActivity {
         };
         sn = new SnakeEngine(h);
         t = new Thread(new SnakeRunnable());
+        cm = new CombatManager(this, h);
 
         levelText = (TextView)findViewById(R.id.levelText);
         timeText = (TextView)findViewById(R.id.timeText);
@@ -176,7 +179,7 @@ public class MainActivity extends AppCompatActivity {
         combatButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                cm.initConnection();
             }
         });
 
