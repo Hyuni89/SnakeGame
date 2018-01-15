@@ -5,6 +5,8 @@ import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.os.Handler;
 
+import com.example.cho.snake.MainActivity;
+
 /**
  * Created by cho on 18. 1. 10.
  */
@@ -13,7 +15,8 @@ public class CombatManager {
     private BluetoothAdapter mBluetoothAdapter;
     private Handler mHandler;
     private Activity mActivity;
-    final private int REQUEST_ENABLE_BT = 100;
+    static final public int REQUEST_ENABLE_BT = 100;
+    static final public int REQUEST_CONNECT_DEVICE = 101;
 
     public CombatManager(Activity activity, Handler handler) {
         mHandler = handler;
@@ -29,11 +32,18 @@ public class CombatManager {
         if(!mBluetoothAdapter.isEnabled()) {
             Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             mActivity.startActivityForResult(intent, REQUEST_ENABLE_BT);
+        } else {
+            scanDevice();
         }
     }
 
     public void initConnection() {
-        if(getDeviceState()) enableBluetooth();
-        else return;
+        if(getDeviceState()) {
+            enableBluetooth();
+        }
+    }
+
+    public void scanDevice() {
+        ((MainActivity)mActivity).showDevicesListState();
     }
 }

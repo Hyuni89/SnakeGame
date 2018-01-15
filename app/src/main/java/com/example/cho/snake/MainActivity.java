@@ -18,6 +18,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.example.cho.snake.connection.CombatManager;
+import com.example.cho.snake.connection.DeviceListFragment;
 import com.example.cho.snake.database.RecordInfo;
 import com.example.cho.snake.database.ScoreDB;
 import com.example.cho.snake.fragments.GameOverFragment;
@@ -213,6 +214,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void showGameOverState() {
         fg = new GameOverFragment();
+        if(fm == null) fm = getFragmentManager();
         ft = fm.beginTransaction();
         ft.add(R.id.fragmentPosition, fg);
         ft.commit();
@@ -221,6 +223,16 @@ public class MainActivity extends AppCompatActivity {
     public void showScoreBoardState() {
         clearFragment();
         fg = new ScoreBoardFragment();
+        if(fm == null) fm = getFragmentManager();
+        ft = fm.beginTransaction();
+        ft.add(R.id.fragmentPosition, fg);
+        ft.commit();
+    }
+
+    public void showDevicesListState() {
+        clearFragment();
+        fg = new DeviceListFragment();
+        if(fm == null) fm = getFragmentManager();
         ft = fm.beginTransaction();
         ft.add(R.id.fragmentPosition, fg);
         ft.commit();
@@ -303,6 +315,16 @@ public class MainActivity extends AppCompatActivity {
             Message msg = new Message();
             msg.what = GAMEOVER;
             h.sendMessage(msg);
+        }
+    }
+
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch(requestCode) {
+            case CombatManager.REQUEST_ENABLE_BT:
+                if(resultCode == Activity.RESULT_OK) {
+                    cm.scanDevice();
+                }
+                break;
         }
     }
 }
