@@ -325,6 +325,11 @@ public class MainActivity extends AppCompatActivity {
                     cm.scanDevice();
                 }
                 break;
+            case CombatManager.REQUEST_CONNECT_DEVICE:
+                if(resultCode == Activity.RESULT_OK) {
+                    cm.getDeviceInfo(data);
+                }
+                break;
         }
     }
 }

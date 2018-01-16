@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -37,6 +38,7 @@ public class DeviceListFragment extends Fragment {
     private ListView mPairedListView;
     private ListView mNewListView;
     private ProgressBar mProgressBar;
+    public static String EXTRADEVICEADDRESS = "DeviceAddress";
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -88,6 +90,7 @@ public class DeviceListFragment extends Fragment {
     private void doDiscovery() {
         ((MainActivity)getActivity()).findViewById(R.id.newDevice).setVisibility(View.VISIBLE);
         mProgressBar.setVisibility(View.VISIBLE);
+        mNewAdapter.clear();
 
         if(mBluetoothAdapter.isDiscovering()) {
             mBluetoothAdapter.cancelDiscovery();
@@ -105,10 +108,10 @@ public class DeviceListFragment extends Fragment {
             String address = info.substring(info.length() - 17);
 
             Intent intent = new Intent();
-            intent.putExtra("DeviceAddress", address);
+            intent.putExtra(EXTRADEVICEADDRESS, address);
 
             ((MainActivity)getActivity()).setResult(Activity.RESULT_OK, intent);
-            ((MainActivity)getActivity()).finish();
+            ((MainActivity)getActivity()).clearFragment();
         }
     };
 
@@ -124,8 +127,8 @@ public class DeviceListFragment extends Fragment {
                     mNewAdapter.add(device.getName() + "\n" + device.getAddress());
                 }
             } else if(BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
+                mProgressBar.setVisibility(View.GONE);
                 if(mNewAdapter.getCount() == 0) {
-                    mProgressBar.setVisibility(View.GONE);
                     String noDevice = "No Device Found";
                     mNewAdapter.add(noDevice);
                 }
