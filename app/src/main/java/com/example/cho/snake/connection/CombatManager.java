@@ -3,6 +3,7 @@ package com.example.cho.snake.connection;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.os.Handler;
@@ -34,7 +35,8 @@ public class CombatManager {
     static final private int STATECONNECTING = 202;
     static final private int STATECONNECTED = 203;
 
-    static final private UUID uuid = UUID.fromString("00000003-0000-1000-8000-00805F9B34FB");
+    static final private UUID uuid = UUID.fromString("00000000-0000-1000-8000-00805F9B34FB");
+    static final private String mRival = "Rival";
 
     static final private int BUFSIZE = 1024;
 
@@ -145,6 +147,53 @@ public class CombatManager {
             r = mConnectedThread;
         }
         r.write(out);
+    }
+
+    private class AcceptThread extends Thread {
+        private final BluetoothServerSocket mSocket;
+        private final BluetoothDevice mDevice;
+
+        public AcceptThread(BluetoothDevice device) {
+            // Use a temporary object that is later assigned to mmServerSocket,
+            // because mmServerSocket is final
+            mDevice = device;
+            BluetoothServerSocket tmp = null;
+            try {
+                // MY_UUID is the app's UUID string, also used by the client code
+                tmp = mBluetoothAdapter.listenUsingRfcommWithServiceRecord(mRival, uuid);
+            } catch (IOException e) { }
+            mSocket = tmp;
+        }
+
+        public void run() {
+            BluetoothSocket socket = null;
+            // Keep listening until exception occurs or a socket is returned
+            while (true) {
+                try {
+                    socket = mSocket.accept();
+                } catch (IOException e) {
+                    break;
+                }
+                // If a connection was accepted
+                if (socket != null) {
+                    // Do work to manage the connection (in a separate thread)
+                    connected(socket, mDevice);
+                    try {
+                        mSocket.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    break;
+                }
+            }
+        }
+
+        /** Will cancel the listening socket, and cause the thread to finish */
+        public void cancel() {
+            try {
+                mSocket.close();
+            } catch (IOException e) { }
+        }
     }
 
     private class ConnectThread extends Thread {

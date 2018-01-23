@@ -110,7 +110,7 @@ public class DeviceListFragment extends Fragment {
             Intent intent = new Intent();
             intent.putExtra(EXTRADEVICEADDRESS, address);
 
-            ((MainActivity)getActivity()).setResult(Activity.RESULT_OK, intent);
+            ((MainActivity)getActivity()).onActivityResult(CombatManager.REQUEST_CONNECT_DEVICE, Activity.RESULT_OK, intent);
             ((MainActivity)getActivity()).clearFragment();
         }
     };
