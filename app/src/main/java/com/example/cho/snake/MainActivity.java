@@ -181,6 +181,7 @@ public class MainActivity extends AppCompatActivity {
         combatButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                cm.start();
                 cm.initConnection();
             }
         });

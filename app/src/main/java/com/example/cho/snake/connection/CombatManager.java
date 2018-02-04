@@ -7,6 +7,8 @@ import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.os.Handler;
+import android.util.Log;
+import android.widget.Toast;
 
 import com.example.cho.snake.MainActivity;
 
@@ -26,6 +28,7 @@ public class CombatManager {
     private int mState;
     private ConnectThread mConnectThread;
     private ConnectedThread mConnectedThread;
+    private AcceptThread mAcceptThread;
 
     static final public int REQUEST_ENABLE_BT = 100;
     static final public int REQUEST_CONNECT_DEVICE = 101;
@@ -35,7 +38,9 @@ public class CombatManager {
     static final private int STATECONNECTING = 202;
     static final private int STATECONNECTED = 203;
 
-    static final private UUID uuid = UUID.fromString("00000000-0000-1000-8000-00805F9B34FB");
+//    static final private UUID uuid = UUID.fromString("00000000-0000-1000-8000-00805F9B34FB");
+    private static final UUID uuid = UUID.fromString("fa87c0d0-afac-11de-8a39-0800200c9a66");
+//    private static final UUID uuid= UUID.fromString("8ce255c0-200a-11e0-ac64-0800200c9a66");
     static final private String mRival = "Rival";
 
     static final private int BUFSIZE = 1024;
@@ -49,6 +54,21 @@ public class CombatManager {
 
     private boolean getDeviceState() {
         return (mBluetoothAdapter != null);
+    }
+
+    private void userFeedback() {
+        switch(mState) {
+            case STATECONNECTED:
+                Toast.makeText(mActivity, "Connected", Toast.LENGTH_SHORT).show();
+                break;
+            case STATECONNECTING:
+                Toast.makeText(mActivity, "Connecting...", Toast.LENGTH_SHORT).show();
+                break;
+            case STATELISTEN:
+            case STATENONE:
+                Toast.makeText(mActivity, "Lost. Listenning", Toast.LENGTH_SHORT).show();
+                break;
+        }
     }
 
     private void enableBluetooth() {
@@ -81,6 +101,7 @@ public class CombatManager {
     }
 
     public synchronized void start() {
+        Log.d("by cho", "start function");
         if(mConnectThread != null) {
             mConnectThread.cancel();
             mConnectThread = null;
@@ -90,9 +111,19 @@ public class CombatManager {
             mConnectedThread.cancel();
             mConnectedThread = null;
         }
+
+        if(mAcceptThread == null) {
+            Log.d("by cho", "create accept thread");
+            mAcceptThread = new AcceptThread();
+            mAcceptThread.start();
+        }
+
+        Log.d("by cho", "done start function");
+        userFeedback();
     }
 
     public synchronized void connect(BluetoothDevice device) {
+        Log.d("by cho", "connect");
         if(mState == STATECONNECTING) {
             if(mConnectThread != null) {
                 mConnectThread.cancel();
@@ -105,9 +136,13 @@ public class CombatManager {
             mConnectedThread = null;
         }
 
+        Log.d("by cho", "before create connect thread");
         mConnectThread = new ConnectThread(device);
         mConnectThread.start();
         setState(STATECONNECTING);
+
+        userFeedback();
+        Log.d("by cho", "done connect function");
     }
 
     public synchronized void connected(BluetoothSocket socket, BluetoothDevice device) {
@@ -121,9 +156,16 @@ public class CombatManager {
             mConnectedThread = null;
         }
 
+        if(mAcceptThread!= null) {
+            mAcceptThread.cancel();
+            mAcceptThread = null;
+        }
+
         mConnectedThread = new ConnectedThread(socket);
         mConnectedThread.start();
         setState(STATECONNECTED);
+
+        userFeedback();
     }
 
     public synchronized void stop() {
@@ -137,7 +179,13 @@ public class CombatManager {
             mConnectedThread = null;
         }
 
+        if(mAcceptThread != null) {
+            mAcceptThread.cancel();
+            mAcceptThread = null;
+        }
+
         setState(STATENONE);
+        userFeedback();
     }
 
     public void write(byte[] out) {
@@ -151,48 +199,59 @@ public class CombatManager {
 
     private class AcceptThread extends Thread {
         private final BluetoothServerSocket mSocket;
-        private final BluetoothDevice mDevice;
 
-        public AcceptThread(BluetoothDevice device) {
-            // Use a temporary object that is later assigned to mmServerSocket,
-            // because mmServerSocket is final
-            mDevice = device;
+        public AcceptThread() {
+
             BluetoothServerSocket tmp = null;
+
             try {
-                // MY_UUID is the app's UUID string, also used by the client code
                 tmp = mBluetoothAdapter.listenUsingRfcommWithServiceRecord(mRival, uuid);
-            } catch (IOException e) { }
+            } catch (IOException e) {}
+
             mSocket = tmp;
+            mState = STATELISTEN;
         }
 
         public void run() {
+            Log.d("by cho", "accept thread");
             BluetoothSocket socket = null;
-            // Keep listening until exception occurs or a socket is returned
-            while (true) {
+
+            while(mState != STATECONNECTED) {
                 try {
                     socket = mSocket.accept();
                 } catch (IOException e) {
+                    Log.d("by cho", "accept fail");
                     break;
                 }
-                // If a connection was accepted
+
                 if (socket != null) {
-                    // Do work to manage the connection (in a separate thread)
-                    connected(socket, mDevice);
-                    try {
-                        mSocket.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                    synchronized(CombatManager.this) {
+                        switch(mState) {
+                            case STATELISTEN:
+                            case STATECONNECTING:
+                                Log.d("by cho", "call connected function");
+                                connected(socket, socket.getRemoteDevice());
+                                break;
+                            case STATENONE:
+                            case STATECONNECTED:
+                                try {
+                                    Log.d("by cho", "close socket");
+                                    mSocket.close();
+                                } catch (IOException e) {
+                                    Log.d("by cho", "exception for close socket");
+                                    e.printStackTrace();
+                                }
+                                break;
+                        }
                     }
-                    break;
                 }
             }
         }
 
-        /** Will cancel the listening socket, and cause the thread to finish */
         public void cancel() {
             try {
                 mSocket.close();
-            } catch (IOException e) { }
+            } catch (IOException e) {}
         }
     }
 
@@ -214,6 +273,7 @@ public class CombatManager {
 
         public void run() {
             mBluetoothAdapter.cancelDiscovery();
+            Log.d("by cho", "connection thread");
 
             try {
                 mSocket.connect();
@@ -226,8 +286,10 @@ public class CombatManager {
                     e1.printStackTrace();
                 }
 
+                Log.d("by cho", "fail socket connection");
                 CombatManager.this.start();
                 e.printStackTrace();
+                Log.d("by cho", "restart class");
 
                 return;
             }
@@ -236,6 +298,7 @@ public class CombatManager {
                 mConnectThread = null;
             }
 
+            Log.d("by cho", "done connection thread");
             connected(mSocket, mDevice);
         }
 
