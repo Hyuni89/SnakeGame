@@ -17,6 +17,7 @@ import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.cho.snake.connection.CombatManager;
 import com.example.cho.snake.connection.DeviceListFragment;
@@ -114,12 +115,19 @@ public class MainActivity extends AppCompatActivity {
                     } else {
                         showGameOverState();
                     }
+                } else if(msg.what == cm.STATECONNECTED) {
+                    Toast.makeText(getApplicationContext(), "Connected", Toast.LENGTH_SHORT).show();
+                } else if(msg.what == cm.STATECONNECTING) {
+                    Toast.makeText(getApplicationContext(), "Connecting...", Toast.LENGTH_SHORT).show();
+                } else if(msg.what == cm.STATELISTEN) {
+                    Toast.makeText(getApplicationContext(), "Listening", Toast.LENGTH_SHORT).show();
                 }
             }
         };
         sn = new SnakeEngine(h);
         t = new Thread(new SnakeRunnable());
         cm = new CombatManager(this, h);
+        cm.start();
 
         levelText = (TextView)findViewById(R.id.levelText);
         timeText = (TextView)findViewById(R.id.timeText);
@@ -181,7 +189,6 @@ public class MainActivity extends AppCompatActivity {
         combatButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                cm.start();
                 cm.initConnection();
             }
         });
