@@ -106,4 +106,15 @@
         android:layout_toLeftOf="@+id/pauseButton"
         android:src="@drawable/combat"/>
 
+    <GridLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/pauseButton"
+        android:layout_marginTop="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_alignParentRight="true"
+        android:visibility="gone"
+        android:id="@+id/rivalMap">
+    </GridLayout>
+
 </RelativeLayout>

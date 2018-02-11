@@ -12,10 +12,12 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.example.cho.snake.MainActivity;
+import com.example.cho.snake.SnakeEngine;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.UUID;
 
 /**
@@ -30,6 +32,7 @@ public class CombatManager {
     private ConnectThread mConnectThread;
     private ConnectedThread mConnectedThread;
     private AcceptThread mAcceptThread;
+    private SnakeEngine engine;
 
     static final public int REQUEST_ENABLE_BT = 100;
     static final public int REQUEST_CONNECT_DEVICE = 101;
@@ -47,10 +50,11 @@ public class CombatManager {
 
     static final private int BUFSIZE = 1024;
 
-    public CombatManager(Activity activity, Handler handler) {
+    public CombatManager(Activity activity, Handler handler, SnakeEngine engine) {
         mHandler = handler;
         mActivity = activity;
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        this.engine = engine;
         setState(STATENONE);
     }
 
@@ -156,7 +160,7 @@ public class CombatManager {
             mAcceptThread = null;
         }
 
-        mConnectedThread = new ConnectedThread(socket);
+        mConnectedThread = new ConnectedThread(socket, engine);
         mConnectedThread.start();
     }
 
@@ -301,11 +305,16 @@ public class CombatManager {
         private final BluetoothSocket mSocket;
         private final InputStream mInput;
         private final OutputStream mOutput;
+        private final SnakeEngine engine;
+        private int[][] rivalMap;
+        private int level;
 
-        public ConnectedThread(BluetoothSocket socket) {
+        public ConnectedThread(BluetoothSocket socket, SnakeEngine engine) {
             mSocket = socket;
             InputStream tmpInput = null;
             OutputStream tmpOutput = null;
+            this.engine = engine;
+            level = 0;
 
             try {
                 tmpInput = mSocket.getInputStream();
@@ -326,6 +335,7 @@ public class CombatManager {
             int bytes = 0;
 
             while(mState == STATECONNECTED) {
+                encode(buffer);
                 try {
                     bytes = mInput.read(buffer);
                 } catch (IOException e) {
@@ -349,6 +359,37 @@ public class CombatManager {
                 mSocket.close();
             } catch (IOException e) {
                 e.printStackTrace();
+            }
+        }
+
+        public void encode(byte[] buffer) {
+            Arrays.fill(buffer, (byte)0);
+            int map[][] = engine.getMap();
+            int n = map.length - 2;
+            int cnt = 0;
+            buffer[cnt++] = (byte)n;
+
+            for(int i = 1; i <= n; i++) {
+                for(int j = 1; j <= n; j++) {
+                    buffer[cnt++] = (byte)map[i][j];
+                }
+            }
+
+            write(buffer);
+        }
+
+        public void decode(byte[] buffer) {
+            int n = buffer[0];
+            if(level != n) {
+                level = n;
+                rivalMap = new int[n + 2][n + 2];
+                for(int i = 0; i < n + 2; i++) {
+                    Arrays.fill(rivalMap[i], 0);
+                }
+            }
+
+            for(int i = 1; i < buffer.length; i++) {
+
             }
         }
     }

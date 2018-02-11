@@ -37,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView scoreText;
     private RelativeLayout rl;
     private GridLayout gl;
+    private GridLayout rivalMap;
     private SnakeEngine sn;
     private Handler h;
     private Thread t;
@@ -50,6 +51,7 @@ public class MainActivity extends AppCompatActivity {
     private ImageView combatButton;
     private boolean pause;
     private CombatManager cm;
+    private boolean isCombat;
 
     static final int NOTIFY_N = 0;
     static final int UPDATE_ELEMENT = 1;
@@ -67,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
         deviceWidth = dm.widthPixels;
         deviceHeight = dm.heightPixels;
         pause = false;
+        isCombat = false;
 
         db = new ScoreDB(this);
         h = new Handler() {
@@ -117,16 +120,19 @@ public class MainActivity extends AppCompatActivity {
                     }
                 } else if(msg.what == cm.STATECONNECTED) {
                     Toast.makeText(getApplicationContext(), "Connected", Toast.LENGTH_SHORT).show();
+                    isCombat = true;
                 } else if(msg.what == cm.STATECONNECTING) {
                     Toast.makeText(getApplicationContext(), "Connecting...", Toast.LENGTH_SHORT).show();
+                    isCombat = false;
                 } else if(msg.what == cm.STATELISTEN) {
                     Toast.makeText(getApplicationContext(), "Listening", Toast.LENGTH_SHORT).show();
+                    isCombat = false;
                 }
             }
         };
         sn = new SnakeEngine(h);
         t = new Thread(new SnakeRunnable());
-        cm = new CombatManager(this, h);
+        cm = new CombatManager(this, h, sn);
         cm.start();
 
         levelText = (TextView)findViewById(R.id.levelText);
@@ -134,6 +140,7 @@ public class MainActivity extends AppCompatActivity {
         scoreText = (TextView)findViewById(R.id.scoreText);
         tv = (TextView)findViewById(R.id.gestureStatusText);
         gl = (GridLayout)findViewById(R.id.SnakeMap);
+        rivalMap = (GridLayout)findViewById(R.id.rivalMap);
         rl = (RelativeLayout)findViewById(R.id.mainLayer);
         rl.setOnTouchListener(new TouchListener(this) {
             @Override
