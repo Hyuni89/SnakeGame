@@ -77,11 +77,12 @@ public class MainActivity extends AppCompatActivity {
             public void handleMessage(Message msg) {
                 if(msg.what == NOTIFY_N) {
                     int n = msg.arg1;
-                    gl.removeAllViews();
-                    gl.setColumnCount(n);
+                    GridLayout target = (GridLayout)msg.obj;
+                    target.removeAllViews();
+                    target.setColumnCount(n);
 
                     for(int i = 0; i < n * n; i++) {
-                        ImageView iv = new ImageView((Context)msg.obj);
+                        ImageView iv = new ImageView(MainActivity.this);
                         iv.setImageResource(R.drawable.cell);
                         iv.setLayoutParams(new GridLayout.LayoutParams());
 
@@ -89,13 +90,17 @@ public class MainActivity extends AppCompatActivity {
 //                        int px = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10, r.getDisplayMetrics());
                         GridLayout.LayoutParams params = (GridLayout.LayoutParams)iv.getLayoutParams();
                         int px = (int)(deviceWidth * 0.6) / n;
+                        if(target == rivalMap) {
+                            px = (int)(deviceWidth * 0.2) / n;
+                        }
                         params.width = px;
                         params.height = px;
 
-                        gl.addView(iv, params);
+                        target.addView(iv, params);
                     }
                 } else if(msg.what == UPDATE_ELEMENT) {
-                    ImageView iv = (ImageView)gl.getChildAt(msg.arg2);
+                    GridLayout target = (GridLayout)msg.obj;
+                    ImageView iv = (ImageView)target.getChildAt(msg.arg2);
                     if(iv != null) {
                         iv.setImageResource(msg.arg1);
                     }
@@ -121,12 +126,16 @@ public class MainActivity extends AppCompatActivity {
                 } else if(msg.what == cm.STATECONNECTED) {
                     Toast.makeText(getApplicationContext(), "Connected", Toast.LENGTH_SHORT).show();
                     isCombat = true;
+                    cm.setRivalMap(rivalMap);
+                    rivalMap.setVisibility(View.VISIBLE);
                 } else if(msg.what == cm.STATECONNECTING) {
                     Toast.makeText(getApplicationContext(), "Connecting...", Toast.LENGTH_SHORT).show();
                     isCombat = false;
+                    rivalMap.setVisibility(View.GONE);
                 } else if(msg.what == cm.STATELISTEN) {
                     Toast.makeText(getApplicationContext(), "Listening", Toast.LENGTH_SHORT).show();
                     isCombat = false;
+                    rivalMap.setVisibility(View.GONE);
                 }
             }
         };
@@ -264,7 +273,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void show(int[][] map) {
+    public void show(GridLayout target, int[][] map) {
         int n = map.length - 2;
         int iv = 0;
 
@@ -291,6 +300,7 @@ public class MainActivity extends AppCompatActivity {
 
                 Message msg = new Message();
                 msg.what = UPDATE_ELEMENT;
+                msg.obj = target;
                 msg.arg1 = iv;
                 msg.arg2 = (i - 1) * n + (j - 1);
                 h.sendMessage(msg);
@@ -298,11 +308,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void initMap(int mapSize) {
+    public void initMap(GridLayout map, int mapSize) {
         Message msg = new Message();
         msg.what = NOTIFY_N;
         msg.arg1 = mapSize;
-        msg.obj = this;
+        msg.obj = map;
         h.sendMessage(msg);
     }
 
@@ -312,7 +322,7 @@ public class MainActivity extends AppCompatActivity {
             int level = -1;
             while(sn.isAlive()) {
                 if(level != sn.getLevel()) {
-                    initMap(sn.getMap().length - 2);
+                    initMap(gl, sn.getMap().length - 2);
                     level = sn.getLevel();
                     continue;
                 }
@@ -320,7 +330,7 @@ public class MainActivity extends AppCompatActivity {
                 while(pause);
 
                 sn.go();
-                show(sn.getMap());
+                show(gl, sn.getMap());
                 try {
                     Thread.sleep((long)(1000 * sn.getGap()));
                 } catch(Exception e) {
@@ -348,5 +358,10 @@ public class MainActivity extends AppCompatActivity {
                 }
                 break;
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        clearFragment();
     }
 }

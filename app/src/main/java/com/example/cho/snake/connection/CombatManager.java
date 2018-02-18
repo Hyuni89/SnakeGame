@@ -9,7 +9,7 @@ import android.content.Intent;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
-import android.widget.Toast;
+import android.widget.GridLayout;
 
 import com.example.cho.snake.MainActivity;
 import com.example.cho.snake.SnakeEngine;
@@ -33,6 +33,7 @@ public class CombatManager {
     private ConnectedThread mConnectedThread;
     private AcceptThread mAcceptThread;
     private SnakeEngine engine;
+    private GridLayout mRivalGridMap;
 
     static final public int REQUEST_ENABLE_BT = 100;
     static final public int REQUEST_CONNECT_DEVICE = 101;
@@ -53,6 +54,7 @@ public class CombatManager {
     public CombatManager(Activity activity, Handler handler, SnakeEngine engine) {
         mHandler = handler;
         mActivity = activity;
+        mRivalGridMap= null;
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         this.engine = engine;
         setState(STATENONE);
@@ -95,6 +97,10 @@ public class CombatManager {
     }
 
     public void scanDevice() {
+        if(mAcceptThread == null) {
+            mAcceptThread = new AcceptThread();
+            mAcceptThread.start();
+        }
         if(mState != STATECONNECTED) ((MainActivity)mActivity).showDevicesListState();
     }
 
@@ -119,11 +125,12 @@ public class CombatManager {
             mConnectedThread = null;
         }
 
-        if(mAcceptThread == null) {
+        if(mAcceptThread == null && mBluetoothAdapter.isEnabled()) {
             mAcceptThread = new AcceptThread();
             mAcceptThread.start();
         }
 
+        mRivalGridMap = null;
         userFeedback();
     }
 
@@ -155,7 +162,7 @@ public class CombatManager {
             mConnectedThread = null;
         }
 
-        if(mAcceptThread!= null) {
+        if(mAcceptThread != null) {
             mAcceptThread.cancel();
             mAcceptThread = null;
         }
@@ -202,7 +209,9 @@ public class CombatManager {
 
             try {
                 tmp = mBluetoothAdapter.listenUsingRfcommWithServiceRecord(mRival, uuid);
-            } catch (IOException e) {}
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
             mSocket = tmp;
             mState = STATELISTEN;
@@ -307,14 +316,14 @@ public class CombatManager {
         private final OutputStream mOutput;
         private final SnakeEngine engine;
         private int[][] rivalMap;
-        private int level;
+        private int size;
 
         public ConnectedThread(BluetoothSocket socket, SnakeEngine engine) {
             mSocket = socket;
             InputStream tmpInput = null;
             OutputStream tmpOutput = null;
             this.engine = engine;
-            level = 0;
+            size = 0;
 
             try {
                 tmpInput = mSocket.getInputStream();
@@ -338,15 +347,25 @@ public class CombatManager {
                 encode(buffer);
                 try {
                     bytes = mInput.read(buffer);
+                    Log.d("by cho", String.format("receive[%d][%d][%d][%d][%d]", bytes, buffer[0], buffer[1], buffer[2], buffer[3]));
                 } catch (IOException e) {
                     setState(STATELISTEN);
+                    userFeedback();
                     e.printStackTrace();
                     break;
                 }
+                if(mRivalGridMap != null) {
+                    decode(buffer);
+                    ((MainActivity)mActivity).show(mRivalGridMap, rivalMap);
+                }
             }
+
+            setState(STATELISTEN);
+            CombatManager.this.start();
         }
 
         public void write(byte[] buffer) {
+            Log.d("by cho", String.format("send[%d][%d][%d][%d]", buffer[0], buffer[1], buffer[2], buffer[3]));
             try {
                 mOutput.write(buffer);
             } catch (IOException e) {
@@ -380,17 +399,24 @@ public class CombatManager {
 
         public void decode(byte[] buffer) {
             int n = buffer[0];
-            if(level != n) {
-                level = n;
+            if(size != n) {
+                size = n;
                 rivalMap = new int[n + 2][n + 2];
                 for(int i = 0; i < n + 2; i++) {
-                    Arrays.fill(rivalMap[i], 0);
+                    Arrays.fill(rivalMap[i], -1);
+                }
+                ((MainActivity)mActivity).initMap(mRivalGridMap, size);
+            }
+
+            for(int i = 0; i < n; i++) {
+                for(int j = 0; j < n; j++) {
+                    rivalMap[i + 1][j + 1] = buffer[i * n + j + 1];
                 }
             }
-
-            for(int i = 1; i < buffer.length; i++) {
-
-            }
         }
+    }
+
+    public void setRivalMap(GridLayout map) {
+        mRivalGridMap = map;
     }
 }
