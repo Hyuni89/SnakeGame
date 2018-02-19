@@ -49,7 +49,7 @@ public class CombatManager {
 //    private static final UUID uuid= UUID.fromString("8ce255c0-200a-11e0-ac64-0800200c9a66");
     static final private String mRival = "Rival";
 
-    static final private int BUFSIZE = 1024;
+    static final public int BUFSIZE = 1024;
 
     public CombatManager(Activity activity, Handler handler, SnakeEngine engine) {
         mHandler = handler;
@@ -344,16 +344,15 @@ public class CombatManager {
             int bytes = 0;
 
             while(mState == STATECONNECTED) {
-                encode(buffer);
                 try {
                     bytes = mInput.read(buffer);
-                    Log.d("by cho", String.format("receive[%d][%d][%d][%d][%d]", bytes, buffer[0], buffer[1], buffer[2], buffer[3]));
                 } catch (IOException e) {
                     setState(STATELISTEN);
                     userFeedback();
                     e.printStackTrace();
                     break;
                 }
+                if(buffer[0] == 0) continue;
                 if(mRivalGridMap != null) {
                     decode(buffer);
                     ((MainActivity)mActivity).show(mRivalGridMap, rivalMap);
@@ -365,7 +364,8 @@ public class CombatManager {
         }
 
         public void write(byte[] buffer) {
-            Log.d("by cho", String.format("send[%d][%d][%d][%d]", buffer[0], buffer[1], buffer[2], buffer[3]));
+            encode(buffer);
+
             try {
                 mOutput.write(buffer);
             } catch (IOException e) {
@@ -393,8 +393,6 @@ public class CombatManager {
                     buffer[cnt++] = (byte)map[i][j];
                 }
             }
-
-            write(buffer);
         }
 
         public void decode(byte[] buffer) {

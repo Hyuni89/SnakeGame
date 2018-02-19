@@ -331,6 +331,12 @@ public class MainActivity extends AppCompatActivity {
 
                 sn.go();
                 show(gl, sn.getMap());
+
+                if(isCombat) {
+                    byte[] data = new byte[CombatManager.BUFSIZE];
+                    cm.write(data);
+                }
+
                 try {
                     Thread.sleep((long)(1000 * sn.getGap()));
                 } catch(Exception e) {
