@@ -314,9 +314,11 @@ public class CombatManager {
         private final BluetoothSocket mSocket;
         private final InputStream mInput;
         private final OutputStream mOutput;
-        private final SnakeEngine engine;
+        private SnakeEngine engine;
         private int[][] rivalMap;
         private int size;
+        private boolean isReady;
+        private boolean isRivalReady;
 
         public ConnectedThread(BluetoothSocket socket, SnakeEngine engine) {
             mSocket = socket;
@@ -324,6 +326,8 @@ public class CombatManager {
             OutputStream tmpOutput = null;
             this.engine = engine;
             size = 0;
+            isReady = false;
+            isRivalReady = false;
 
             try {
                 tmpInput = mSocket.getInputStream();
@@ -352,7 +356,16 @@ public class CombatManager {
                     e.printStackTrace();
                     break;
                 }
+
                 if(buffer[0] == 0) continue;
+                else if(buffer[0] == 1) {
+                    isRivalReady = false;
+                    continue;
+                } else if(buffer[0] == 2) {
+                    isRivalReady = true;
+                    continue;
+                }
+
                 if(mRivalGridMap != null) {
                     decode(buffer);
                     ((MainActivity)mActivity).show(mRivalGridMap, rivalMap);
@@ -412,9 +425,54 @@ public class CombatManager {
                 }
             }
         }
+
+        public void setSnakeEngine(SnakeEngine engine) {
+            this.engine = engine;
+        }
+
+        public void setReady(boolean ready) {
+            byte[] buffer = new byte[1];
+            isReady = ready;
+            if(ready) {
+                buffer[0] = (byte)2;
+            } else {
+                buffer[0] = (byte)1;
+            }
+
+            try {
+                mOutput.write(buffer);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        public boolean getReady() {
+            return isRivalReady;
+        }
     }
 
     public void setRivalMap(GridLayout map) {
         mRivalGridMap = map;
+    }
+
+    public void setSnakeEngine(SnakeEngine engine) {
+        this.engine = engine;
+        if(mConnectedThread != null) {
+            mConnectedThread.setSnakeEngine(engine);
+        }
+    }
+
+    public void setReady(boolean ready) {
+        if(mConnectedThread != null) {
+            mConnectedThread.setReady(ready);
+        }
+    }
+
+    public boolean getReady() {
+        if(mConnectedThread != null) {
+            return mConnectedThread.getReady();
+        }
+
+        return false;
     }
 }

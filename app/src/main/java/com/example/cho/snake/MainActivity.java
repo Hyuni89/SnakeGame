@@ -52,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean pause;
     private CombatManager cm;
     private boolean isCombat;
+    private boolean isCombatReady;
 
     static final int NOTIFY_N = 0;
     static final int UPDATE_ELEMENT = 1;
@@ -70,6 +71,7 @@ public class MainActivity extends AppCompatActivity {
         deviceHeight = dm.heightPixels;
         pause = false;
         isCombat = false;
+        isCombatReady = false;
 
         db = new ScoreDB(this);
         h = new Handler() {
@@ -126,15 +128,18 @@ public class MainActivity extends AppCompatActivity {
                 } else if(msg.what == cm.STATECONNECTED) {
                     Toast.makeText(getApplicationContext(), "Connected", Toast.LENGTH_SHORT).show();
                     isCombat = true;
+                    isCombatReady = false;
                     cm.setRivalMap(rivalMap);
                     rivalMap.setVisibility(View.VISIBLE);
                 } else if(msg.what == cm.STATECONNECTING) {
                     Toast.makeText(getApplicationContext(), "Connecting...", Toast.LENGTH_SHORT).show();
                     isCombat = false;
+                    isCombatReady = false;
                     rivalMap.setVisibility(View.GONE);
                 } else if(msg.what == cm.STATELISTEN) {
                     Toast.makeText(getApplicationContext(), "Listening", Toast.LENGTH_SHORT).show();
                     isCombat = false;
+                    isCombatReady = false;
                     rivalMap.setVisibility(View.GONE);
                 }
             }
@@ -176,19 +181,21 @@ public class MainActivity extends AppCompatActivity {
                 sn.setDirection(4);
             }
 
-//            @Override
-//            public void Cont() {
-//                if(!sn.isAlive()) {
-//                    try {
-//                        t.join();
-//                    } catch (InterruptedException e) {
-//                        e.printStackTrace();
-//                    }
-//                    sn = new SnakeEngine(h);
-//                    t = new Thread(new SnakeRunnable());
-//                    t.start();
-//                }
-//            }
+            @Override
+            public void Cont() {
+                if(isCombat && sn.getDirection() == 0) {
+                    if(!isCombatReady) {
+                        timeText.setText("Ready!!");
+                        isCombatReady = true;
+                    } else {
+                        timeText.setText("Touch To Ready");
+                        isCombatReady = false;
+                    }
+                    cm.setReady(isCombatReady);
+                } else if(fg == null) {
+                    restartGame();
+                }
+            }
         });
         pauseButton = (ImageView)findViewById(R.id.pauseButton);
         pauseButton.setOnClickListener(new View.OnClickListener() {
@@ -222,6 +229,8 @@ public class MainActivity extends AppCompatActivity {
             clearFragment();
 
             sn = new SnakeEngine(h);
+            cm.setSnakeEngine(sn);
+            isCombatReady = false;
             t = new Thread(new SnakeRunnable());
             t.start();
         }
@@ -328,6 +337,13 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 while(pause);
+
+                while(isCombat) {
+                    if(isCombatReady && cm.getReady()) {
+                        if(sn.getDirection() == 0) sn.setDirection(1);
+                        break;
+                    }
+                }
 
                 sn.go();
                 show(gl, sn.getMap());

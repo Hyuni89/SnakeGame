@@ -178,6 +178,10 @@ public class SnakeEngine {
         }
     }
 
+    public int getDirection() {
+        return  direction;
+    }
+
     public void go() {
         int tx = body.get(body.size() - 1).x;
         int ty = body.get(body.size() - 1).y;
