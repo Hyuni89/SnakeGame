@@ -53,6 +53,8 @@ public class MainActivity extends AppCompatActivity {
     private CombatManager cm;
     private boolean isCombat;
     private boolean isCombatReady;
+    private boolean interruptEngine;
+    private boolean isWinner;
 
     static final int NOTIFY_N = 0;
     static final int UPDATE_ELEMENT = 1;
@@ -72,6 +74,8 @@ public class MainActivity extends AppCompatActivity {
         pause = false;
         isCombat = false;
         isCombatReady = false;
+        interruptEngine = false;
+        isWinner = false;
 
         db = new ScoreDB(this);
         h = new Handler() {
@@ -114,7 +118,7 @@ public class MainActivity extends AppCompatActivity {
                     scoreText.setText("Score " + Integer.toString(msg.arg1));
                 } else if(msg.what == GAMEOVER) {
                     fm = getFragmentManager();
-                    if(db.isPut(sn.getScore())) {
+                    if(!isCombat && db.isPut(sn.getScore())) {
                         fg = new InputScoreFragment();
                         Bundle bundle = new Bundle();
                         bundle.putInt("score", sn.getScore());
@@ -127,6 +131,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 } else if(msg.what == cm.STATECONNECTED) {
                     Toast.makeText(getApplicationContext(), "Connected", Toast.LENGTH_SHORT).show();
+                    clearFragment();
                     isCombat = true;
                     isCombatReady = false;
                     cm.setRivalMap(rivalMap);
@@ -159,26 +164,34 @@ public class MainActivity extends AppCompatActivity {
         rl.setOnTouchListener(new TouchListener(this) {
             @Override
             public void onSwipeUp() {
-                tv.setText("Up");
-                sn.setDirection(1);
+                if(!isCombat || (isCombat && sn.getDirection() != 0)) {
+                    tv.setText("Up");
+                    sn.setDirection(1);
+                }
             }
 
             @Override
             public void onSwipeDown() {
-                tv.setText("Down");
-                sn.setDirection(2);
+                if(!isCombat || (isCombat && sn.getDirection() != 0)) {
+                    tv.setText("Down");
+                    sn.setDirection(2);
+                }
             }
 
             @Override
             public void onSwipeLeft() {
-                tv.setText("Left");
-                sn.setDirection(3);
+                if(!isCombat || (isCombat && sn.getDirection() != 0)) {
+                    tv.setText("Left");
+                    sn.setDirection(3);
+                }
             }
 
             @Override
             public void onSwipeRight() {
-                tv.setText("Right");
-                sn.setDirection(4);
+                if(!isCombat || (isCombat && sn.getDirection() != 0)) {
+                    tv.setText("Right");
+                    sn.setDirection(4);
+                }
             }
 
             @Override
@@ -201,10 +214,12 @@ public class MainActivity extends AppCompatActivity {
         pauseButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                pause = !pause;
-                sn.setPause(pause);
-                if(pause) {
-                    timeText.setText("Pause");
+                if(!isCombat) {
+                    pause = !pause;
+                    sn.setPause(pause);
+                    if(pause) {
+                        timeText.setText("Pause");
+                    }
                 }
             }
         });
@@ -212,7 +227,11 @@ public class MainActivity extends AppCompatActivity {
         combatButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                cm.initConnection();
+                if(!isCombat) {
+                    stopEngine();
+                    restartGame();
+                    cm.initConnection();
+                }
             }
         });
 
@@ -231,6 +250,8 @@ public class MainActivity extends AppCompatActivity {
             sn = new SnakeEngine(h);
             cm.setSnakeEngine(sn);
             isCombatReady = false;
+            cm.setReady(isCombatReady);
+            isWinner = false;
             t = new Thread(new SnakeRunnable());
             t.start();
         }
@@ -248,6 +269,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void showGameOverState() {
         fg = new GameOverFragment();
+        if(isCombat) ((GameOverFragment)fg).setCombatResult(isWinner);
         if(fm == null) fm = getFragmentManager();
         ft = fm.beginTransaction();
         ft.add(R.id.fragmentPosition, fg);
@@ -329,18 +351,21 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void run() {
             int level = -1;
-            while(sn.isAlive()) {
+            while(sn.isAlive() && !interruptEngine) {
                 if(level != sn.getLevel()) {
                     initMap(gl, sn.getMap().length - 2);
                     level = sn.getLevel();
                     continue;
                 }
 
-                while(pause);
+                while(pause && !interruptEngine);
 
-                while(isCombat) {
+                Log.d("by cho", String.format("isCombat[%b], direction[%d], isReady[%b], rivalReady[%b]", isCombat, sn.getDirection(), isCombatReady, cm.getReady()));
+                while(isCombat && sn.getDirection() == 0 && !interruptEngine) {
                     if(isCombatReady && cm.getReady()) {
-                        if(sn.getDirection() == 0) sn.setDirection(1);
+                        isCombatReady = false;
+                        cm.setReady(isCombatReady);
+                        sn.setDirection(1);
                         break;
                     }
                 }
@@ -350,7 +375,7 @@ public class MainActivity extends AppCompatActivity {
 
                 if(isCombat) {
                     byte[] data = new byte[CombatManager.BUFSIZE];
-                    cm.write(data);
+                    cm.sendMap(data);
                 }
 
                 try {
@@ -360,10 +385,36 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
-            Message msg = new Message();
-            msg.what = GAMEOVER;
-            h.sendMessage(msg);
+            if(interruptEngine) {
+                interruptEngine = false;
+            } else {
+                Message msg = new Message();
+                msg.what = GAMEOVER;
+                h.sendMessage(msg);
+            }
+
+            if(!isWinner && isCombat && !interruptEngine) {
+                isWinner = false;
+                byte[] data = new byte[1];
+                data[0] = (byte)3;
+                cm.write(data);
+            } else if(isWinner){
+                Message msg = new Message();
+                msg.what = GAMEOVER;
+                h.sendMessage(msg);
+            }
         }
+    }
+
+    private void stopEngine() {
+        interruptEngine = true;
+        pause = false;
+        sn.kill();
+    }
+
+    public void setWinner() {
+        isWinner = true;
+        stopEngine();
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {

@@ -200,6 +200,15 @@ public class CombatManager {
         r.write(out);
     }
 
+    public void sendMap(byte[] buffer) {
+        ConnectedThread r;
+        synchronized(this) {
+            if(mState != STATECONNECTED) return;
+            r = mConnectedThread;
+        }
+        r.sendMap(buffer);
+    }
+
     private class AcceptThread extends Thread {
         private final BluetoothServerSocket mSocket;
 
@@ -364,6 +373,9 @@ public class CombatManager {
                 } else if(buffer[0] == 2) {
                     isRivalReady = true;
                     continue;
+                } else if(buffer[0] == 3) {
+                    ((MainActivity)mActivity).setWinner();
+                    continue;
                 }
 
                 if(mRivalGridMap != null) {
@@ -377,6 +389,14 @@ public class CombatManager {
         }
 
         public void write(byte[] buffer) {
+            try {
+                mOutput.write(buffer);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        public void sendMap(byte[] buffer) {
             encode(buffer);
 
             try {

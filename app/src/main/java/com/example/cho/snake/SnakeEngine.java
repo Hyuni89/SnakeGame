@@ -263,6 +263,12 @@ public class SnakeEngine {
         pause = flag;
     }
 
+    public void kill() {
+        if(isAlive) {
+            isAlive = false;
+        }
+    }
+
     class point {
         public int x;
         public int y;
