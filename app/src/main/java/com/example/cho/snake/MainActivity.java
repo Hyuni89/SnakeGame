@@ -132,6 +132,8 @@ public class MainActivity extends AppCompatActivity {
                 } else if(msg.what == cm.STATECONNECTED) {
                     Toast.makeText(getApplicationContext(), "Connected", Toast.LENGTH_SHORT).show();
                     clearFragment();
+                    stopEngine();
+                    restartGame();
                     isCombat = true;
                     isCombatReady = false;
                     cm.setRivalMap(rivalMap);
@@ -231,6 +233,8 @@ public class MainActivity extends AppCompatActivity {
                     stopEngine();
                     restartGame();
                     cm.initConnection();
+                } else {
+                    cm.stop();
                 }
             }
         });
@@ -360,16 +364,6 @@ public class MainActivity extends AppCompatActivity {
 
                 while(pause && !interruptEngine);
 
-                Log.d("by cho", String.format("isCombat[%b], direction[%d], isReady[%b], rivalReady[%b]", isCombat, sn.getDirection(), isCombatReady, cm.getReady()));
-                while(isCombat && sn.getDirection() == 0 && !interruptEngine) {
-                    if(isCombatReady && cm.getReady()) {
-                        isCombatReady = false;
-                        cm.setReady(isCombatReady);
-                        sn.setDirection(1);
-                        break;
-                    }
-                }
-
                 sn.go();
                 show(gl, sn.getMap());
 
@@ -377,6 +371,17 @@ public class MainActivity extends AppCompatActivity {
                     byte[] data = new byte[CombatManager.BUFSIZE];
                     cm.sendMap(data);
                 }
+
+                Log.d("by cho", String.format("isCombat[%b], direction[%d], isReady[%b], rivalReady[%b]", isCombat, sn.getDirection(), isCombatReady, cm.getReady()));
+                while(isCombat && sn.getDirection() == 0 && !interruptEngine) {
+                    Log.d("by cho", String.format("isCombat[%b], direction[%d], isReady[%b], rivalReady[%b]", isCombat, sn.getDirection(), isCombatReady, cm.getReady()));
+                    if(isCombatReady && cm.getReady()) {
+                        isCombatReady = false;
+                        sn.setDirection(1);
+                        break;
+                    }
+                }
+                cm.setReady(isCombatReady);
 
                 try {
                     Thread.sleep((long)(1000 * sn.getGap()));

@@ -189,6 +189,8 @@ public class CombatManager {
 
         setState(STATENONE);
         userFeedback();
+
+        start();
     }
 
     public void write(byte[] out) {
